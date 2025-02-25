@@ -50,13 +50,20 @@ found_space:
     sb    zero, 0(t0)
     addi  t3, t0, 1
 
-    # Первая подстрока – начало буфера
-    mv    t4, s0            # t4 = first_ptr
+    mv    s2, t3
+check_extra_space:
+    lbu   t1, 0(s2)
+    beq   t1, zero, no_extra_space
+    li    t2, ASCII_SPACE
+    beq   t1, t2, invalid_format
+    addi  s2, s2, 1
+    j     check_extra_space
+no_extra_space:
+    mv    t4, s0
 
     lbu   t1, 0(t4)
     beq   t1, zero, invalid_format
 
-    # Sign handling for first number (t5 = first_sign)
     li    t5, 1
     lbu   t1, 0(t4)
     li    t2, ASCII_MINUS

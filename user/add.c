@@ -34,6 +34,24 @@ read_line(int fd, char* buffer, int buffer_size)
 }
 
 int
+is_number(const char *c)
+{
+    if (*c == '-') {
+        c++;
+    }
+    if (*c == '\0') {
+        return 0;
+    }
+    while (*c) {
+        if (*c < '0' || *c > '9') {
+            return 0;
+        }
+        c++;
+    }
+    return 1;
+}
+
+int
 main(int argc, char *argv[])
 {
     char buffer[BUFFER_SIZE];
@@ -44,7 +62,7 @@ main(int argc, char *argv[])
     char *space = 0;
     space = strchr(buffer, ' ');
     if (!space) {
-        printf("add: invalid input format\n");
+        fprintf(2, "add: invalid input format: no whitespace\n");
         exit(1);
     }
 
@@ -64,9 +82,15 @@ main(int argc, char *argv[])
     }
 
     if (*first_ptr == '\0' || *second_ptr == '\0') {
-        printf("add: invalid input format\n");
+        fprintf(2, "add: invalid input format\n");
         exit(1);
     }
+
+    if (!is_number(first_ptr) || !is_number(second_ptr)) {
+        fprintf(2, "add: invalid input format: non-digit characters found\n");
+        exit(1);
+    }
+
 
     int a = atoi(first_ptr) * first_sign;
     int b = atoi(second_ptr) * second_sign;
