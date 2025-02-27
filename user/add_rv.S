@@ -15,8 +15,9 @@ main:
     addi sp, sp, -BUFFER_SIZE
     mv    s0, sp
 
-    # Read line using gets(s0)
+    # Read line using gets(s0, BUFFER_SIZE)
     mv    a0, s0
+    li    a1, BUFFER_SIZE
     call  gets
 
     mv    t0, s0
