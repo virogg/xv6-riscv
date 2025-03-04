@@ -76,7 +76,10 @@ main(int argc, char *argv[])
             exit(EXIT_FAILURE);
         }
     }
-    close(pipefd[1]);
+    if (close(pipefd[1]) < 0) {
+        perror("close error");
+        exit(EXIT_FAILURE);
+    }
     wait(NULL);
     exit(EXIT_SUCCESS);
 }

@@ -14,7 +14,7 @@ main(int argc, char* argv[])
     int pid = fork();
     if (pid < 0) {
         fprintf(2, "fork error\n");
-        exit(1);
+        exit(2);
     }
     if (pid == 0) {
         sleep(SLEEP_TIME);
@@ -30,12 +30,12 @@ main(int argc, char* argv[])
     }
 
     int status;
-    int pid_wait = wait(&status);
-    if (pid_wait < 0) {
+    int p = wait(&status);
+    if (p < 0) {
         fprintf(2, "wait error\n");
         exit(1);
     }
 
-    printf("Child PID: %d, exit code: %d\n", pid, status);
+    printf("Process: %d, Status: %d\n", p, status);
     exit(0);
 }
