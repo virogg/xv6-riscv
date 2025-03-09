@@ -22,6 +22,7 @@ int getpid(void);
 char* sbrk(int);
 int sleep(int);
 int uptime(void);
+int ps_listinfo(struct procinfo *plist, int lim);
 
 // ulib.c
 int stat(const char*, struct stat*);
