@@ -38,13 +38,23 @@ main(int argc, char* argv[])
         exit(1);
     }
     if (pid == 0) {
-        close(pipefd[1]);
-        close(0);
+        if (close(pipefd[1]) < 0) {
+            fprintf(2, "close pipefd[1] error\n");
+            exit(1);
+        }
+
+        if (close(0) < 0) {
+            fprintf(2, "close(0) error\n");
+            exit(1);
+        }
         if (dup(pipefd[0]) < 0) {
             fprintf(2, "dup error\n");
             exit(1);
         }
-        close(pipefd[0]);
+        if (close(pipefd[0]) < 0) {
+            fprintf(2, "close pipefd[0] error\n");
+            exit(1);
+        }
 
         char *wc_argv[] = {"/wc", 0};
         exec("/wc", wc_argv);
@@ -52,7 +62,10 @@ main(int argc, char* argv[])
         fprintf(2, "exec error\n");
         exit(1);
     }
-    close(pipefd[0]);
+    if (close(pipefd[0]) < 0) {
+        fprintf(2, "close pipefd[0] error\n");
+        exit(1);
+    }
     for (int i = 1; i < argc; i++) {
         char *arg = argv[i];
         int len = strlen(arg);
@@ -73,6 +86,8 @@ main(int argc, char* argv[])
 
     if (close(pipefd[1]) < 0) {
         fprintf(2, "close error\n");
+        wait(0);
+        exit(1);
     }
     wait(0);
     exit(0);

@@ -2,13 +2,13 @@
 #include "kernel/stat.h"
 #include "user/user.h"
 
-static const int SLEEP_TIME = 10;
+static const int SLEEP_TIME = 100;
 
 int
 main(int argc, char* argv[])
 {
     int use_kill = 0;
-    if (argc > 1 && strcmp(argv[1], "-kill") == 0) {
+    if (argc > 1 && strcmp(argv[1], "-k") == 0) {
         use_kill = 1;
     }
     int pid = fork();

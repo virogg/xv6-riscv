@@ -21,7 +21,10 @@ main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
     if (pid == 0) {
-        close(pipefd[1]);
+        if (close(pipefd[1]) < 0) {
+            perror("close write-end in child");
+            exit(EXIT_FAILURE);
+        }
 
         char buffer[CHUNK_SIZE];
         ssize_t len;
@@ -44,11 +47,18 @@ main(int argc, char *argv[])
                 written += w;
             }
         }
-        close(pipefd[0]);
+
+        if (close(pipefd[0]) < 0) {
+            perror("close read-end in child");
+            exit(EXIT_FAILURE);
+        }
         exit(EXIT_SUCCESS);
     }
 
-    close(pipefd[0]);
+    if (close(pipefd[0]) < 0) {
+        perror("close read-end in parent");
+        exit(EXIT_FAILURE);
+    }
 
     for (int i = 1; i < argc; i++) {
         char *arg = argv[i];
@@ -78,6 +88,7 @@ main(int argc, char *argv[])
     }
     if (close(pipefd[1]) < 0) {
         perror("close error");
+        wait(NULL);
         exit(EXIT_FAILURE);
     }
     wait(NULL);
