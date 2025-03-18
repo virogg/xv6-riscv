@@ -12,8 +12,8 @@ assert(int s, const char* test_name)
 void
 test_buffer_size()
 {
-    const int buffer_size = 2;
-    struct procinfo *buf = malloc(buffer_size * sizeof(struct procinfo));
+    const int lim = 2;
+    struct procinfo *buf = malloc(lim * sizeof(struct procinfo));
     if (buf == 0) {
         fprintf(2, "[test_buffer_size] failed: malloc error\n");
         free(buf);
@@ -31,7 +31,7 @@ test_buffer_size()
         free(buf);
         exit(1);
     }
-    int r = ps_listinfo(buf, buffer_size);
+    int r = ps_listinfo(buf, lim);
     free(buf);
     assert(r == -2, "test_buffer_size");
     printf("[test_buffer_size]: passed, err = %d\n", r);
@@ -56,17 +56,17 @@ test_null_plist()
 void
 test_correct()
 {
-    const int buffer_size = 64;
-    struct procinfo *buf = malloc(buffer_size * sizeof(struct procinfo));
+    const int lim = 64;
+    struct procinfo *buf = malloc(lim * sizeof(struct procinfo));
     if (buf == 0) {
         fprintf(2, "[test_correct] failed: malloc error\n");
         free(buf);
         return;
     }
-    int r = ps_listinfo(buf, buffer_size);
+    int r = ps_listinfo(buf, lim);
     free(buf);
     assert(r > 0 && r <= 64, "test_correct");
-    printf("[test_correct]: passed.\n");
+    printf("[test_correct]: passed, r = %d\n", r);
 }
 
 int

@@ -701,7 +701,7 @@ sys_ps_listinfo(void)
     int lim;
     int cnt = 0;
 
-    argaddr(0, (uint64 *)&plist);
+    argaddr(0, (uint64*)&plist);
     argint(1, &lim);
 
     struct proc *p;

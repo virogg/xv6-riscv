@@ -1,8 +1,6 @@
 #include "kernel/types.h"
 #include "user/user.h"
 
-#define BUFFER_SIZE 64
-
 static char*
 state_to_string(int st)
 {
@@ -19,19 +17,20 @@ state_to_string(int st)
 int
 main()
 {
-    int lim, n;
+    int lim;
+    int r;
     struct procinfo *buf = 0;
 
-    n = ps_listinfo(0, 0);
-    if (n < 0) {
-        printf("ps: error getting process count, err=%d\n", n);
+    r = ps_listinfo(0, 0);
+    if (r < 0) {
+        printf("ps: error getting process count, err=%d\n", r);
         exit(1);
     }
-    if (n == 0) {
+    if (r == 0) {
         fprintf(2, "ps: no processes\n");
         exit(1);
     }
-    lim = n;
+    lim = r;
 
     while(1) {
         buf = malloc(lim * sizeof(struct procinfo));
@@ -39,17 +38,17 @@ main()
             printf("ps: malloc error\n");
             exit(1);
         }
-        n = ps_listinfo(buf, lim);
-        if (n == -2){
+        r = ps_listinfo(buf, lim);
+        if (r == -2) {
             free(buf);
             lim *= 2;
         } else {
             break;
         }
     }
-    printf("Got %d processes (buffer size %d)\n", n, lim);
+    printf("Got %d processes (buffer size %d)\n", r, lim);
     printf("id\tname\tstate\t\tppid\tpname\n");
-    for (int i = 0; i < n; i++) {
+    for (int i = 0; i < r; i++) {
         printf("%d\t%s\t%s\t%d\t%s\n", buf[i].pid, buf[i].name, state_to_string(buf[i].state), buf[i].ppid, buf[i].pname);
     }
     free(buf);
