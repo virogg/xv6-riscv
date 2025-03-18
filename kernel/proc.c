@@ -693,3 +693,59 @@ procdump(void)
     printf("\n");
   }
 }
+
+uint64
+sys_ps_listinfo(void)
+{
+    struct procinfo *plist;
+    int lim;
+    int cnt = 0;
+
+    argaddr(0, (uint64 *)&plist);
+    argint(1, &lim);
+
+    struct proc *p;
+    for (p = proc; p < &proc[NPROC]; p++) {
+        acquire(&p->lock);
+        if (p->state != UNUSED) {
+            cnt++;
+        }
+        release(&p->lock);
+    }
+
+    if (plist == 0) {
+        return cnt;
+    }
+
+    if (cnt > lim) {
+        return -2; //small buffer
+    }
+
+    int res = 0;
+    for (p = proc; p < &proc[NPROC]; p++) {
+        acquire(&p->lock);
+        if (p-> state == UNUSED) {
+            release(&p->lock);
+            continue;
+        }
+
+        struct procinfo info;
+        info.pid = p->pid;
+        info.state = p->state;
+        safestrcpy(info.name, p->name, sizeof(info.name));
+
+        acquire(&wait_lock);
+        info.ppid = p->parent ? p->parent->pid : -1; //or 0?
+        safestrcpy(info.pname, (p->parent) ? p->parent->name : "-", sizeof(info.pname));
+        release(&wait_lock);
+
+        release(&p->lock);
+
+        uint64 t = (uint64)plist + res * sizeof(info);
+        if (copyout(myproc()->pagetable, t, (char*)&info, sizeof(info)) < 0) {
+            return -3; //copyout error
+        }
+        res++;
+    }
+    return res;
+}
