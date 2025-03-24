@@ -698,7 +698,8 @@ uint64
 sys_ps_listinfo(void)
 {
     struct procinfo *plist;
-    int lim;
+    int lim = 0;
+    int res = 0;
     int cnt = 0;
 
     argaddr(0, (uint64*)&plist);
@@ -707,26 +708,21 @@ sys_ps_listinfo(void)
     struct proc *p;
     for (p = proc; p < &proc[NPROC]; p++) {
         acquire(&p->lock);
-        if (p->state != UNUSED) {
-            cnt++;
-        }
-        release(&p->lock);
-    }
-
-    if (plist == 0) {
-        return cnt;
-    }
-
-    if (cnt > lim) {
-        return -2; //small buffer
-    }
-
-    int res = 0;
-    for (p = proc; p < &proc[NPROC]; p++) {
-        acquire(&p->lock);
-        if (p-> state == UNUSED) {
+        if (p->state == UNUSED || p->state == USED) {
             release(&p->lock);
             continue;
+        }
+
+        cnt++;
+
+        if (plist == 0) {
+            release(&p->lock);
+            continue;
+        }
+
+        if (cnt > lim) {
+            release(&p->lock);
+            return -2;
         }
 
         struct procinfo info;
@@ -735,8 +731,17 @@ sys_ps_listinfo(void)
         safestrcpy(info.name, p->name, sizeof(info.name));
 
         acquire(&wait_lock);
-        info.ppid = p->parent ? p->parent->pid : -1; //or 0?
-        safestrcpy(info.pname, (p->parent) ? p->parent->name : "-", sizeof(info.pname));
+        if (p->parent) {
+            acquire(&p->parent->lock);
+
+            info.ppid = p->parent->pid;
+            safestrcpy(info.pname, p->parent->name, sizeof(info.pname));
+
+            release(&p->parent->lock);
+        } else {
+            info.ppid = -1;
+            safestrcpy(info.pname, "-", sizeof(info.pname));
+        }
         release(&wait_lock);
 
         release(&p->lock);
@@ -746,6 +751,10 @@ sys_ps_listinfo(void)
             return -3; //copyout error
         }
         res++;
+    }
+
+    if (plist == 0) {
+        return cnt;
     }
     return res;
 }

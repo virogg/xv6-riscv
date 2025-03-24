@@ -5,12 +5,13 @@ static char*
 state_to_string(int st)
 {
     switch(st){
-        case 0: return "UNUSED";
-        case 1: return "SLEEP";
-        case 2: return "RUNNABLE";
-        case 3: return "RUNNING\t";
-        case 4: return "ZOMBIE\t";
-        default: return "???\t";
+        case 0:  return "UNUSED";
+        case 1:  return "USED";
+        case 2:  return "SLEEP\t";
+        case 3:  return "RUNNABLE\t";
+        case 4:  return "RUNNING\t";
+        case 5:  return "ZOMBIE\t";
+        default: return "???";
     }
 }
 
