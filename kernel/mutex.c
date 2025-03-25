@@ -27,10 +27,9 @@ mutexalloc(struct file **f)
     }
     if (logger) printf("INFO: %d [mutexalloc] kalloc OK (mu=0x%p)\n", myproc()->pid, mu);
 
+    initsleeplock(mu, "mutex");
     (*f)->type = FD_MUTEX;
     (*f)->mutex = mu;
-
-    initsleeplock((*f)->mutex, "mutex");
     (*f)->readable = 0;
     (*f)->writable = 0;
 
@@ -38,7 +37,7 @@ mutexalloc(struct file **f)
     return 0;
 bad:
     if (mu) {
-        kfree(mu);
+        kfree((char*)mu);
         if (logger) printf("INFO: %d [mutexalloc] kfree mu=0x%p\n", myproc()->pid, mu);
     }
     if (*f) {
@@ -51,18 +50,10 @@ bad:
 void
 mutexclose(struct file *f)
 {
-    if (f->mutex) {
-        if (f->mutex->locked && f->mutex->pid != myproc()->pid) {
-            if (logger) printf("INFO: %d [mutexclose] mutex (mu=0x%p) locked by another process %d\n", myproc()->pid, f->mutex, f->mutex->pid);
-            return;
-        }
-        if (f->mutex->locked) {
-            releasesleep(f->mutex);
-            if (logger) printf("INFO: %d [mutexclose] mutex unlocked (mu=0x%p)\n", myproc()->pid, f->mutex);
-        }
-
-        kfree(f->mutex);
+    if (!holdingsleep(f->mutex)) {
+        kfree((char*) f->mutex);
         if (logger) printf("INFO: %d [mutexclose] kfree mu=0x%p\n", myproc()->pid, f->mutex);
+        return;
     }
-    if (logger) printf("WARN: %d [mutexclose] null mutex (f=0x%p)\n", myproc()->pid, f);
+    panic("mutexclose");
 }

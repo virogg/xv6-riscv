@@ -13,6 +13,8 @@
 #include "stat.h"
 #include "proc.h"
 
+extern int logger;
+
 struct devsw devsw[NDEV];
 struct {
   struct spinlock lock;
@@ -76,6 +78,10 @@ fileclose(struct file *f)
   if(ff.type == FD_PIPE){
     pipeclose(ff.pipe, ff.writable);
   } else if (ff.type == FD_MUTEX) {
+      if (ff.mutex->locked && ff.mutex->pid == myproc()->pid) {
+          releasesleep(ff.mutex);
+          if (logger) printf("INFO: %d [fileclose] mutex unlocked (mu=0x%p)\n", myproc()->pid, ff.mutex);
+      }
       mutexclose(&ff);
   } else if(ff.type == FD_INODE || ff.type == FD_DEVICE){
     begin_op();

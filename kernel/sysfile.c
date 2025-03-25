@@ -504,49 +504,63 @@ sys_pipe(void)
   return 0;
 }
 
+extern int logger;
+
 uint64
 sys_mutex(void)
 {
-    struct file *f;
-    if (mutexalloc(&f) < 0) {
+    uint64 mutexfd;
+    struct file *rf;
+    struct proc *p = myproc();
+    int fd;
+
+    argaddr(0, &mutexfd);
+    if (mutexalloc(&rf) < 0) {
         return -1;
     }
 
-    int fd = 0;
-    if ((fd = fdalloc(f)) < 0) {
-        fileclose(f);
+    if ((fd = fdalloc(rf)) < 0) {
+        fileclose(rf);
         return -1;
     }
-    return fd;
+    if (copyout(p->pagetable, mutexfd, (char*)&fd, sizeof(fd)) < 0) {
+        p->ofile[fd] = 0;
+        fileclose(rf);
+        return -1;
+    }
+
+    return 0;
 }
 
 uint64
 sys_mutex_lock(void)
 {
-    int fd;
     struct file *f;
 
-    argint(0, &fd);
-    if (fd < 0 || (f = myproc()->ofile[fd]) == 0 || f->type != FD_MUTEX) {
+    if (argfd(0, 0, &f) < 0) {
         return -1;
     }
+    if (holdingsleep(f->mutex)) {
+        return -1;
+    }
+
     acquiresleep(f->mutex);
+    if (logger) printf("INFO: %d [mutexclose] mutex locked (mu=0x%p)\n", myproc()->pid, f->mutex);
     return 0;
 }
 
 uint64
 sys_mutex_unlock(void)
 {
-    int fd;
     struct file *f;
 
-    argint(0, &fd);
-    if (fd < 0 || (f = myproc()->ofile[fd]) == 0 || f->type != FD_MUTEX) {
+    if (argfd(0, 0, &f) < 0) {
         return -1;
     }
-    if (f->mutex->pid != myproc()->pid) {
+    if (!holdingsleep(f->mutex)) {
         return -1;
     }
     releasesleep(f->mutex);
+    if (logger) printf("INFO: %d [mutexclose] mutex unlocked (mu=0x%p)\n", myproc()->pid, f->mutex);
     return 0;
 }

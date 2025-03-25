@@ -4,7 +4,8 @@
 int
 main(int argc, char *argv[])
 {
-    int mu = mutex();
+    int mu;
+    mutex(&mu);
     if (mu < 0) {
         fprintf(2, "mutex create error\n");
         exit(1);
