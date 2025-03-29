@@ -7,8 +7,8 @@ state_to_string(int st)
     switch(st){
         case 0:  return "UNUSED";
         case 1:  return "USED";
-        case 2:  return "SLEEP\t";
-        case 3:  return "RUNNABLE\t";
+        case 2:  return "SLEEPING";
+        case 3:  return "RUNNABLE";
         case 4:  return "RUNNING\t";
         case 5:  return "ZOMBIE\t";
         default: return "???";
