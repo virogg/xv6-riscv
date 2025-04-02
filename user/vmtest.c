@@ -4,13 +4,13 @@
 #define HEAP_SIZE 4096 * 4
 #define STACK_SIZE 1024
 
-void print_separator(const char *message) {
+void print_testname(const char *message) {
     printf("\n\n----- %s -----\n", message);
 }
 
 int global_var;
 void test_global_var() {
-    print_separator("Testing Global Variable");
+    print_testname("Global Variable");
     printf("\n=== Initial state ===\n");
     vmprint(0, 0, 0);
 
@@ -31,7 +31,7 @@ void test_global_var() {
 }
 
 void test_stack_var() {
-    print_separator("Testing Stack Variable");
+    print_testname("Stack Variable");
     printf("\n=== Initial state ===\n");
     vmprint(0, 0, 0);
 
@@ -55,7 +55,7 @@ void test_stack_var() {
 }
 
 void test_stack_array() {
-    print_separator("Testing Stack Array");
+    print_testname("Stack Array");
     printf("\n=== Initial state ===\n");
     vmprint(0, 0, 0);
 
@@ -79,7 +79,7 @@ void test_stack_array() {
 }
 
 void test_heap_array() {
-    print_separator("Testing Heap Array");
+    print_testname("Heap Array");
     printf("\n=== Initial state ===\n");
     vmprint(0, 0, 0);
 
@@ -100,7 +100,14 @@ void test_heap_array() {
     vmprint(heap, HEAP_SIZE, 0);
 
     vmclear(0, 0, 3);
+    printf("\n=== After flags clear ===\n");
+    vmprint(0, 0, 0);
+
     free(heap);
+    printf("\n=== After memory free ===\n");
+    vmprint(0, 0, 0);
+
+    vmclear(0, 0, 3);
 }
 
 int main() {
