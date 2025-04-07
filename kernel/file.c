@@ -13,6 +13,8 @@
 #include "stat.h"
 #include "proc.h"
 
+extern int logger;
+
 struct devsw devsw[NDEV];
 struct {
   struct spinlock lock;
@@ -65,6 +67,12 @@ fileclose(struct file *f)
   if(f->ref < 1)
     panic("fileclose");
   if(--f->ref > 0){
+      if (f->type == FD_MUTEX && holdingsleep(f->mutex)){
+          ff = *f;
+          release(&ftable.lock);
+          releasesleep(ff.mutex);
+          return;
+      }
     release(&ftable.lock);
     return;
   }
@@ -75,6 +83,10 @@ fileclose(struct file *f)
 
   if(ff.type == FD_PIPE){
     pipeclose(ff.pipe, ff.writable);
+  } else if (ff.type == FD_MUTEX) {
+      releasesleep(ff.mutex);
+      if (logger) printf("INFO: %d [fileclose] mutex unlocked (mu=0x%p)\n", myproc()->pid, ff.mutex);
+      mutexclose(&ff);
   } else if(ff.type == FD_INODE || ff.type == FD_DEVICE){
     begin_op();
     iput(ff.ip);
@@ -122,6 +134,8 @@ fileread(struct file *f, uint64 addr, int n)
     if((r = readi(f->ip, 1, addr, f->off, n)) > 0)
       f->off += r;
     iunlock(f->ip);
+  } else if (f->type == FD_MUTEX) {
+      return -1;
   } else {
     panic("fileread");
   }
@@ -173,6 +187,8 @@ filewrite(struct file *f, uint64 addr, int n)
       i += r;
     }
     ret = (i == n ? n : -1);
+  } else if (f->type == FD_MUTEX) {
+    return -1;
   } else {
     panic("filewrite");
   }

@@ -6,6 +6,8 @@
 #include "spinlock.h"
 #include "proc.h"
 
+extern int logger;
+
 uint64
 sys_exit(void)
 {
@@ -90,4 +92,14 @@ sys_uptime(void)
   xticks = ticks;
   release(&tickslock);
   return xticks;
+}
+
+uint64
+sys_logger(void)
+{
+    int enable;
+    argint(0, &enable);
+    if (enable < 0) return -1;
+    logger = (enable != 0) ? 1 : 0;
+    return 0;
 }
