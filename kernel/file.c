@@ -67,6 +67,12 @@ fileclose(struct file *f)
   if(f->ref < 1)
     panic("fileclose");
   if(--f->ref > 0){
+      if (f->type == FD_MUTEX && holdingsleep(f->mutex)){
+          ff = *f;
+          release(&ftable.lock);
+          releasesleep(ff.mutex);
+          return;
+      }
     release(&ftable.lock);
     return;
   }
@@ -78,10 +84,8 @@ fileclose(struct file *f)
   if(ff.type == FD_PIPE){
     pipeclose(ff.pipe, ff.writable);
   } else if (ff.type == FD_MUTEX) {
-      if (ff.mutex->locked && ff.mutex->pid == myproc()->pid) {
-          releasesleep(ff.mutex);
-          if (logger) printf("INFO: %d [fileclose] mutex unlocked (mu=0x%p)\n", myproc()->pid, ff.mutex);
-      }
+      releasesleep(ff.mutex);
+      if (logger) printf("INFO: %d [fileclose] mutex unlocked (mu=0x%p)\n", myproc()->pid, ff.mutex);
       mutexclose(&ff);
   } else if(ff.type == FD_INODE || ff.type == FD_DEVICE){
     begin_op();

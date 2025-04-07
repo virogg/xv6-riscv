@@ -50,10 +50,10 @@ bad:
 void
 mutexclose(struct file *f)
 {
-    if (!holdingsleep(f->mutex)) {
-        kfree((char*) f->mutex);
-        if (logger) printf("INFO: %d [mutexclose] kfree mu=0x%p\n", myproc()->pid, f->mutex);
-        return;
-    }
-    panic("mutexclose");
+    if (holdingsleep(f->mutex))
+        panic("mutexclose");
+
+    kfree((char*) f->mutex);
+    if (logger) printf("INFO: %d [mutexclose] kfree mu=0x%p\n", myproc()->pid, f->mutex);
+    return;
 }
