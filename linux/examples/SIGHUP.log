@@ -1,0 +1,24 @@
+[2025-04-12 02:28:09] INFO  fifo_echo_server.c:184: Starting server (PID: 58441)
+[2025-04-12 02:28:09] INFO  fifo_echo_server.c:197: FIFO created
+[2025-04-12 02:28:14] INFO  fifo_echo_server.c:153: Server active, waiting for data
+[2025-04-12 02:28:19] INFO  fifo_echo_server.c:153: Server active, waiting for data
+[2025-04-12 02:28:20] INFO  fifo_echo_server.c:61:  Received SIGHUP, daemonizing
+[2025-04-12 02:28:24] INFO  fifo_echo_server.c:153: Server active, waiting for data
+[2025-04-12 02:28:25] INFO  fifo_echo_server.c:225: FIFO opened (fd: 4)
+[2025-04-12 02:28:25] INFO  fifo_echo_server.c:242: Received 12 bytes: Hello world
+
+[2025-04-12 02:28:25] INFO  fifo_echo_server.c:251: FIFO closed
+[2025-04-12 02:28:25] INFO  fifo_echo_server.c:122: Daemonization completed
+[2025-04-12 02:28:25] INFO  fifo_echo_server.c:123: Daemon PID: 58456
+[2025-04-12 02:28:25] INFO  fifo_echo_server.c:124: Statistics at daemonization:
+[2025-04-12 02:28:25] INFO  fifo_echo_server.c:89:  Statistics: Messages=1 Bytes=12 Alarms=3
+[2025-04-12 02:28:35] INFO  fifo_echo_server.c:225: FIFO opened (fd: 4)
+[2025-04-12 02:28:35] INFO  fifo_echo_server.c:242: Received 12 bytes: Hello world
+
+[2025-04-12 02:28:35] INFO  fifo_echo_server.c:251: FIFO closed
+[2025-04-12 02:28:40] INFO  fifo_echo_server.c:153: Server active, waiting for data
+[2025-04-12 02:28:45] INFO  fifo_echo_server.c:153: Server active, waiting for data
+[2025-04-12 02:28:50] INFO  fifo_echo_server.c:46:  Received SIGTERM, immediate shutdown
+[2025-04-12 02:28:50] INFO  fifo_echo_server.c:142: Immediate shutdown requested
+[2025-04-12 02:28:50] INFO  fifo_echo_server.c:130: Removing FIFO /tmp/myfifo
+[2025-04-12 02:28:50] INFO  fifo_echo_server.c:135: Server shutdown

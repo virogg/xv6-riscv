@@ -1,0 +1,11 @@
+[2025-04-12 01:56:20] INFO  fifo_echo_server.c:209: Starting server (PID: 57919)
+[2025-04-12 01:56:20] INFO  fifo_echo_server.c:222: FIFO created
+[2025-04-12 01:56:23] INFO  fifo_echo_server.c:247: FIFO opened (fd: 4)
+[2025-04-12 01:56:23] INFO  fifo_echo_server.c:264: Received 12 bytes: Hello world
+
+[2025-04-12 01:56:23] INFO  fifo_echo_server.c:273: FIFO closed
+[2025-04-12 01:56:28] INFO  fifo_echo_server.c:178: Server active, waiting for data
+[2025-04-12 01:56:30] INFO  fifo_echo_server.c:45: Received SIGTERM, immediate shutdown
+[2025-04-12 01:56:30] INFO  fifo_echo_server.c:167: Immediate shutdown requested
+[2025-04-12 01:56:30] INFO  fifo_echo_server.c:155: Removing FIFO /tmp/myfifo
+[2025-04-12 01:56:30] INFO  fifo_echo_server.c:160: Server shutdown
