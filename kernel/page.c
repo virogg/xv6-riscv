@@ -6,6 +6,9 @@
 #include "spinlock.h"
 #include "proc.h"
 
+#define FLAG_D (1 << 0)
+#define FLAG_A (1 << 1)
+
 char*
 get_pte_flags(pte_t pte)
 {
@@ -63,6 +66,7 @@ sys_vmprint(void)
     uint64 buf;
     uint64 len;
     int flags;
+    int pte_flags = 0;
 
     argaddr(0, &buf);
     argaddr(1, &len);
@@ -75,13 +79,13 @@ sys_vmprint(void)
 
     if (buf + len > MAXVA) return -1;
 
-    if (flags & 1) flags = PTE_D;
-    else if (flags & 2) flags = PTE_A;
-    else if (flags & 3) flags = PTE_D | PTE_A;
-    else if (flags != 0) return -1;
+    if (flags & FLAG_D) pte_flags |= PTE_D;
+    if (flags & FLAG_A) pte_flags |= PTE_A;
+    if (flags & ~(FLAG_D | FLAG_A)) return -1;
+
 
     printf("PAGETABLE 0x%p\n", p->pagetable);
-    vmprint_recursive(p->pagetable, 2, 0, buf, buf + len, flags);
+    vmprint_recursive(p->pagetable, 2, 0, buf, buf + len, pte_flags);
 
     return 0;
 }
@@ -111,6 +115,7 @@ sys_vmclear(void)
     uint64 buf;
     uint64 len;
     int flags;
+    int pte_flags = 0;
 
     argaddr(0, &buf);
     argaddr(1, &len);
@@ -123,12 +128,11 @@ sys_vmclear(void)
 
     if (buf + len > MAXVA) return -1;
 
-    if (flags == 1) flags = PTE_D;
-    else if (flags == 2) flags = PTE_A;
-    else if (flags == 3) flags = PTE_D | PTE_A;
-    else if (flags != 0) return -1;
+    if (flags & FLAG_D) pte_flags |= PTE_D;
+    if (flags & FLAG_A) pte_flags |= PTE_A;
+    if (flags & ~(FLAG_D | FLAG_A)) return -1;
 
-    vmclear_recursive(p->pagetable, 2, 0, buf, buf + len, flags);
+    vmclear_recursive(p->pagetable, 2, 0, buf, buf + len, pte_flags);
 
     return 0;
 }

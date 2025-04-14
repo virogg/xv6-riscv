@@ -4,6 +4,9 @@
 #define HEAP_SIZE 4096 * 4
 #define STACK_SIZE 1024
 
+#define FLAG_D (1 << 0)
+#define FLAG_A (1 << 1)
+
 void print_testname(const char *message) {
     printf("\n\n----- %s -----\n", message);
 }
@@ -18,7 +21,7 @@ void test_global_var() {
     printf("\n=== After global variable write ===\n");
     vmprint((const char *)&global_var, 1, 0);
 
-    vmclear(0, 0, 3);
+    vmclear(0, 0, FLAG_D | FLAG_A);
     printf("\n=== After flags clear ===\n");
     vmprint(0, 0, 0);
 
@@ -27,7 +30,7 @@ void test_global_var() {
     vmprint((const char *)&global_var, 1, 0);
 
     global_var = x;
-    vmclear(0, 0, 3);
+    vmclear(0, 0, FLAG_D | FLAG_A);
 }
 
 void test_stack_var() {
@@ -43,7 +46,7 @@ void test_stack_var() {
     printf("\n=== After stack variable write ===\n");
     vmprint((const char *)&stack_var, 1, 0);
 
-    vmclear(0, 0, 3);
+    vmclear(0, 0, FLAG_D | FLAG_A);
     printf("\n=== After flags clear ===\n");
     vmprint(0, 0, 0);
 
@@ -51,7 +54,7 @@ void test_stack_var() {
     printf("\n=== After stack variable read ===\n");
     vmprint((const char *)&stack_var, 1, 0);
 
-    vmclear(0, 0, 3);
+    vmclear(0, 0, FLAG_D | FLAG_A);
 }
 
 void test_stack_array() {
@@ -67,7 +70,7 @@ void test_stack_array() {
     printf("\n=== After stack write ===\n");
     vmprint(stack, sizeof(stack), 0);
 
-    vmclear(0, 0, 3);
+    vmclear(0, 0, FLAG_D | FLAG_A);
     printf("\n=== After flags clear ===\n");
     vmprint(0, 0, 0);
 
@@ -75,7 +78,7 @@ void test_stack_array() {
     printf("\n=== After stack read ===\n");
     vmprint(stack, sizeof(stack), 0);
 
-    vmclear(0, 0, 3);
+    vmclear(0, 0, FLAG_D | FLAG_A);
 }
 
 void test_heap_array() {
@@ -91,7 +94,7 @@ void test_heap_array() {
     printf("\n=== After heap write ===\n");
     vmprint(heap, HEAP_SIZE, 0);
 
-    vmclear(0, 0, 3);
+    vmclear(0, 0, FLAG_D | FLAG_A);
     printf("\n=== After flags clear ===\n");
     vmprint(0, 0, 0);
 
@@ -99,7 +102,7 @@ void test_heap_array() {
     printf("\n=== After heap read ===\n");
     vmprint(heap, HEAP_SIZE, 0);
 
-    vmclear(0, 0, 3);
+    vmclear(0, 0, FLAG_D | FLAG_A);
     printf("\n=== After flags clear ===\n");
     vmprint(0, 0, 0);
 
@@ -107,7 +110,24 @@ void test_heap_array() {
     printf("\n=== After memory free ===\n");
     vmprint(0, 0, 0);
 
-    vmclear(0, 0, 3);
+    vmclear(0, 0, FLAG_D | FLAG_A);
+}
+
+void test_dirty_access_flags() {
+    print_testname("Dirty/Access flags");
+    printf("\n=== Initial state ===\n");
+    vmprint(0, 0, 0);
+
+    printf("\n=== Print dirty pages ===\n");
+    vmprint(0, 0, FLAG_D);
+
+    printf("\n=== Print accessed pages ===\n");
+    vmprint(0, 0, FLAG_A);
+
+    printf("\n=== Print dirty and accessed pages ===\n");
+    vmprint(0, 0, FLAG_D | FLAG_A);
+
+    vmclear(0, 0, FLAG_D | FLAG_A);
 }
 
 int main() {
@@ -115,5 +135,6 @@ int main() {
     test_stack_var();
     test_stack_array();
     test_heap_array();
+    test_dirty_access_flags();
     exit(0);
 }
