@@ -14,6 +14,7 @@ typedef enum {
 extern FILE* log_stream;
 
 void log_init(const char *log_file);
+void log_reopen(void);
 void log_close(void);
 void log_message(LogLevel level, const char *file, int line, const char *fmt, ...);
 

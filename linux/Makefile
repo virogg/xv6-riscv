@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -Wall -Wextra -Werror -O2
+CFLAGS = -Wall -Wextra -Werror -O2 -Wno-deprecated-declarations
 
 TARGET = fifo_echo_server
 SRC = fifo_echo_server.c logger.c

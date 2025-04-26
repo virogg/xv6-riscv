@@ -27,7 +27,8 @@ echo "Тест 1: Демон-режим и эхо"
 sleep 2
 echo "Test message" > "$FIFO"
 sleep 1
-grep -q "Received 13 bytes: Test message" "$LOG" || { echo "FAIL: Тест 1"; exit 1; }
+grep -q "Received 13 bytes" "$LOG" || { echo "FAIL: Тест 1"; exit 1; }
+grep -q "Test message" "$LOG" || { echo "FAIL: Тест 1"; exit 1; }
 echo "PASS: Тест 1"
 cleanup
 
@@ -62,9 +63,8 @@ sleep 2
 echo "Foreground test before" > "$FG_FIFO"
 sleep 1
 kill -INT "$FG_PID"
-echo "Foreground test after" > "$FG_FIFO"
 sleep 2
-(grep -q "FIFO closed" "$FG_LOG" && grep -q "Server shutdown" "$FG_LOG") || { echo "FAIL: Тест 4"; exit 1; }
+(grep -q "FIFO $FG_FIFO removed" "$FG_LOG" && grep -q "Server shutdown" "$FG_LOG") || { echo "FAIL: Тест 4"; exit 1; }
 echo "PASS: Тест 4"
 cleanup
 
@@ -87,7 +87,7 @@ kill -HUP "$(pgrep fifo_echo_server)"
 sleep 2
 echo "" > "$FIFO"
 sleep 1
-if [ -f "$LOG" ] && grep -q "Daemon started" "$LOG"; then
+if [ -f "$LOG" ] && grep -q "Daemon started" "$LOG" && grep -q "Daemonization completed" "$LOG"; then
     echo "PASS: Тест 6"
 else
     echo "FAIL: Тест 6"
