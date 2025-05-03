@@ -10,16 +10,22 @@
 #include "proc.h"
 #include "pseudodev.h"
 
-struct spinlock random_lock, nullstat_lock;
-static uint32 base_seed = 1337;
-static uint32 current_seed = 1337;
-uint64 cnt = 0;
+static struct {
+    struct spinlock random_lock;
+    struct spinlock nullstat_lock;
+
+    uint32 rng_seed;
+    uint64 nullstat_cnt;
+} pdev;
+
+#define INPUT_BUF_SIZE 128
+static char zero_buf[INPUT_BUF_SIZE];
 
 static uint8
 nextbyte(void)
 {
-    current_seed = current_seed * 1664525U + 1013904223U; // LCG
-    return (current_seed >> 24) & 0xFF;
+    pdev.rng_seed = pdev.rng_seed * 1664525U + 1013904223U; // LCG
+    return (pdev.rng_seed >> 24) & 0xFF;
 }
 
 int
@@ -33,23 +39,22 @@ pseudodevwrite(int user_src, uint64 src, int n, short minor)
             return -1;
 
         case DEV_URANDOM:
-            if (n != sizeof(current_seed))
+            if (n != sizeof(uint32))
                 return -1;
 
             uint32 new_seed;
             if (either_copyin((char*)&new_seed, user_src, src, n) == -1) {
                 return 0;
             }
-            acquire(&random_lock);
-            base_seed = new_seed;
-            current_seed = base_seed;
-            release(&random_lock);
+            acquire(&pdev.random_lock);
+            pdev.rng_seed= new_seed;
+            release(&pdev.random_lock);
             return n;
 
         case DEV_NULLSTAT: {
-            acquire(&nullstat_lock);
-            cnt += n;
-            release(&nullstat_lock);
+            acquire(&pdev.nullstat_lock);
+            pdev.nullstat_cnt += n;
+            release(&pdev.nullstat_lock);
             return n;
         }
 
@@ -58,67 +63,76 @@ pseudodevwrite(int user_src, uint64 src, int n, short minor)
     }
 }
 
+#define MIN(a,b)  ((a) < (b) ? (a) : (b))
+
 int
 pseudodevread(int user_dst, uint64 dst, int n, short minor)
 {
-    char *kbuf;
-    int ret = -1;
-
-    if((kbuf = kalloc()) == 0)
-        return -1;
+    char buf[64];
+    int ret = 0;
 
     switch(minor) {
         case DEV_NULL:
-            ret = 0;
-            break;
+            return 0;
 
         case DEV_ZERO:
-            memset(kbuf, 0, n);
-            ret = n;
-            break;
+            while (n > 0) {
+                int chunk = MIN(n, PGSIZE);
+                if (either_copyout(user_dst, dst, zero_buf, chunk) < 0) {
+                    return -1;
+                }
+                dst += chunk;
+                n -= chunk;
+                ret += chunk;
+            }
+            return ret;
 
         case DEV_URANDOM:
-            acquire(&random_lock);
-            for (int i = 0; i < n; i++) {
-                kbuf[i] = nextbyte();
+            while (n > 0) {
+                int chunk = MIN(n, (int)sizeof(buf));
+
+                acquire(&pdev.random_lock);
+                for (int i = 0; i < chunk; i++) {
+                    buf[i] = nextbyte();
+                }
+                release(&pdev.random_lock);
+
+                if (either_copyout(user_dst, dst, buf, chunk) < 0) {
+                    return -1;
+                }
+                dst += chunk;
+                n -= chunk;
+                ret += chunk;
             }
-            release(&random_lock);
-            ret = n;
-            break;
+            return ret;
 
         case DEV_NULLSTAT:
             if (n != sizeof(uint64)) {
-                ret = -1;
-                break;
+                return -1;
             }
-            acquire(&nullstat_lock);
-            *(uint64*)kbuf = cnt;
-            release(&nullstat_lock);
-            ret = sizeof(cnt);
-            break;
+
+            uint64 total;
+            acquire(&pdev.nullstat_lock);
+            total = pdev.nullstat_cnt;
+            release(&pdev.nullstat_lock);
+
+            if (either_copyout(user_dst, dst, &total, sizeof(total)) < 0) {
+                return -1;
+            }
+            return sizeof(total);
 
         default:
-            ret = -1;
+            return -1;
     }
-
-    // copy the input byte to the user-space buffer.
-    if(ret > 0) {
-        if(either_copyout(user_dst, dst, kbuf, ret) < 0)
-            ret = -1;
-    }
-
-    kfree(kbuf);
-    return ret;
 }
 
 void 
 pseudodevinit(void) {
-    initlock(&random_lock, "random");
-    initlock(&nullstat_lock, "nullstat");
+    initlock(&pdev.random_lock, "random");
+    initlock(&pdev.nullstat_lock, "nullstat");
 
-    base_seed = 1337;
-    current_seed = base_seed;
-    cnt = 0;
+    pdev.rng_seed = 1337;
+    pdev.nullstat_cnt = 0;
 
     devsw[PSEUDO].read = pseudodevread;
     devsw[PSEUDO].write = pseudodevwrite;
