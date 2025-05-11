@@ -155,6 +155,10 @@ void            uartputc(int);
 void            uartputc_sync(int);
 int             uartgetc(void);
 
+// rtc.c
+uint64          rtcget(void);
+void            rtcinit(void);
+
 // vm.c
 void            kvminit(void);
 void            kvminithart(void);
