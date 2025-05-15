@@ -17,8 +17,6 @@
 #define EXT2_TRIPLY_INDIRECT_BLOCK 14
 #define EXT2_ZEROS_BUF_SIZE 8192
 
-#define S_ISREG(m) (((m) & S_IFMT) == S_IFREG)
-
 // Check endianess
 #if __BYTE_ORDER == __LITTLE_ENDIAN
 #define le16_to_cpu(x) (x)
