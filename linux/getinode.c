@@ -125,7 +125,7 @@ struct ext2_superblock superblock;
 struct ext2_group_desc *group_desc_table;
 
 void* read_block(uint32_t block_num, void *buffer);
-void read_inode(uint32_t inode_num, struct ext2_inode *inode_buf); // Изменена сигнатура
+void read_inode(uint32_t inode_num, struct ext2_inode *inode_buf);
 void output_zeros(uint64_t size);
 uint64_t write_block_data(uint32_t block_num, uint64_t remaining_size);
 void process_indirect_blocks(uint32_t block_num, int level, uint64_t *remaining_size);
