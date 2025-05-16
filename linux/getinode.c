@@ -32,93 +32,90 @@
 
 #pragma pack(push, 1)
 struct ext2_superblock {
-    uint32_t s_inodes_count;         /* Общее количество inodes */
-    uint32_t s_blocks_count;         /* Общее количество блоков */
-    uint32_t s_r_blocks_count;       /* Количество зарезервированных блоков */
-    uint32_t s_free_blocks_count;    /* Количество свободных блоков */
-    uint32_t s_free_inodes_count;    /* Количество свободных inodes */
-    uint32_t s_first_data_block;     /* Первый блок данных */
-    uint32_t s_log_block_size;       /* Размер блока: 1024 << s_log_block_size */
-    uint32_t s_log_frag_size;        /* Размер фрагмента */
-    uint32_t s_blocks_per_group;     /* Количество блоков в группе */
-    uint32_t s_frags_per_group;      /* Количество фрагментов в группе */
-    uint32_t s_inodes_per_group;     /* Количество inodes в группе */
-    uint32_t s_mtime;                /* Время последнего монтирования */
-    uint32_t s_wtime;                /* Время последней записи */
-    uint16_t s_mnt_count;            /* Счетчик монтирований */
-    uint16_t s_max_mnt_count;        /* Максимальное количество монтирований */
-    uint16_t s_magic;                /* Сигнатура (0xEF53) */
-    uint16_t s_state;                /* Состояние */
-    uint16_t s_errors;               /* Поведение при ошибках */
-    uint16_t s_minor_rev_level;      /* Минорная версия */
-    uint32_t s_lastcheck;            /* Время последней проверки */
-    uint32_t s_checkinterval;        /* Интервал между проверками */
-    uint32_t s_creator_os;           /* ОС создатель */
-    uint32_t s_rev_level;            /* Версия */
-    uint16_t s_def_resuid;           /* UID для зарезервированных блоков */
-    uint16_t s_def_resgid;           /* GID для зарезервированных блоков */
+    uint32_t s_inodes_count;         // Total number of inodes in file system
+    uint32_t s_blocks_count;         // Total number of blocks in file system
+    uint32_t s_r_blocks_count;       // Number of blocks reserved for superuser
+    uint32_t s_free_blocks_count;    // Total number of unallocated blocks
+    uint32_t s_free_inodes_count;    // Total number of unallocated inodes
+    uint32_t s_first_data_block;     // Block number of the block containing the superblock (also the starting block number, NOT always zero.)
+    uint32_t s_log_block_size;       // The number to shift 1,024 to the left by to obtain the block size
+    uint32_t s_log_frag_size;        // The number to shift 1,024 to the left by to obtain the fragment size
+    uint32_t s_blocks_per_group;     // Number of blocks in each block group
+    uint32_t s_frags_per_group;      // Number of fragments in each block group
+    uint32_t s_inodes_per_group;     // Number of inodes in each block group
+    uint32_t s_mtime;                // Last mount time
+    uint32_t s_wtime;                // Last written time
+    uint16_t s_mnt_count;            // Number of times the volume has been mounted since its last consistency check
+    uint16_t s_max_mnt_count;        // Number of mounts allowed before a consistency check must be done
+    uint16_t s_magic;                // Ext2 signature (0xef53)
+    uint16_t s_state;                // File system state
+    uint16_t s_errors;               // What to do when an error is detected
+    uint16_t s_minor_rev_level;      // Minor portion of version
+    uint32_t s_lastcheck;            // Time of last consistency check
+    uint32_t s_checkinterval;        // Interval between forced consistency checks
+    uint32_t s_creator_os;           // Operating system ID from which the filesystem on this volume was created
+    uint32_t s_rev_level;            // Major portion of version
+    uint16_t s_def_resuid;           // User ID that can use reserved blocks
+    uint16_t s_def_resgid;           // Group ID that can use reserved blocks
 
-    /* EXT2_DYNAMIC_REV поля */
-    uint32_t s_first_ino;            /* Первый не зарезервированный inode */
-    uint16_t s_inode_size;           /* Размер структуры inode */
-    uint16_t s_block_group_nr;       /* Номер группы этого суперблока */
-    uint32_t s_feature_compat;       /* Совместимые особенности */
-    uint32_t s_feature_incompat;     /* Несовместимые особенности */
-    uint32_t s_feature_ro_compat;    /* Особенности "только для чтения" */
-    uint8_t s_uuid[16];             /* UUID файловой системы */
-    char s_volume_name[16];      /* Метка тома */
-    char s_last_mounted[64];     /* Последняя точка монтирования */
-    uint32_t s_algorithm_usage_bitmap; /* Алгоритмы сжатия */
+    uint32_t s_first_ino;            // First non-reserved inode in file system
+    uint16_t s_inode_size;           // Size of each inode structure in bytes
+    uint16_t s_block_group_nr;       // Block group that this superblock is part of
+    uint32_t s_feature_compat;       // Optional features present
+    uint32_t s_feature_incompat;     // Required features present
+    uint32_t s_feature_ro_compat;    // Features that if not supported, the volume must be mounted read-only
+    uint8_t s_uuid[16];              // File system ID
+    char s_volume_name[16];          // Volume name
+    char s_last_mounted[64];         // Path volume was last mounted to
+    uint32_t s_algorithm_usage_bitmap; // Compression algorithms used
 
-    /* Поля для производительности */
-    uint8_t s_prealloc_blocks;      /* Количество блоков для предвыделения */
-    uint8_t s_prealloc_dir_blocks;  /* Количество блоков для предвыделения для каталогов */
-    uint16_t s_padding1;             /* Выравнивание */
+    uint8_t s_prealloc_blocks;      // Number of blocks to preallocate for files
+    uint8_t s_prealloc_dir_blocks;  // Number of blocks to preallocate for directories
+    uint16_t s_padding1;            // (Unused)
 
-    /* Дополнительные поля для журналирования (ext3) */
-    uint8_t s_journal_uuid[16];     /* UUID журнала */
-    uint32_t s_journal_inum;         /* Inode журнала */
-    uint32_t s_journal_dev;          /* Устройство журнала */
-    uint32_t s_last_orphan;          /* Начало списка "осиротевших" inodes */
-    uint32_t s_hash_seed[4];         /* Сиды для хэширования HTREE */
-    uint8_t s_def_hash_version;     /* Версия алгоритма хеширования по умолчанию */
-    uint8_t s_reserved_char_pad;    /* Выравнивание */
-    uint16_t s_reserved_word_pad;    /* Выравнивание */
-    uint32_t s_default_mount_opts;   /* Параметры монтирования по умолчанию */
-    uint32_t s_first_meta_bg;        /* Первая группа метаданных */
-    uint32_t s_reserved[190];        /* Зарезервировано для будущих изменений */
+    uint8_t s_journal_uuid[16];     // Journal ID
+    uint32_t s_journal_inum;        // Journal inode
+    uint32_t s_journal_dev;         // 	Journal device
+    uint32_t s_last_orphan;         // Head of orphan inode list
+    uint32_t s_hash_seed[4];
+    uint8_t s_def_hash_version;
+    uint8_t s_reserved_char_pad;
+    uint16_t s_reserved_word_pad;
+    uint32_t s_default_mount_opts;
+    uint32_t s_first_meta_bg;
+    uint32_t s_reserved[190];
 };
 
 struct ext2_group_desc {
-    uint32_t bg_block_bitmap;        /* Блок с битовой картой блоков */
-    uint32_t bg_inode_bitmap;        /* Блок с битовой картой inodes */
-    uint32_t bg_inode_table;         /* Первый блок таблицы inodes */
-    uint16_t bg_free_blocks_count;   /* Количество свободных блоков */
-    uint16_t bg_free_inodes_count;   /* Количество свободных inodes */
-    uint16_t bg_used_dirs_count;     /* Количество каталогов */
-    uint16_t bg_pad;                 /* Выравнивание */
-    uint32_t bg_reserved[3];         /* Зарезервировано */
+    uint32_t bg_block_bitmap;        // Block address of block usage bitmap
+    uint32_t bg_inode_bitmap;        // Block address of inode usage bitmap
+    uint32_t bg_inode_table;         // Starting block address of inode table
+    uint16_t bg_free_blocks_count;   // Number of unallocated blocks in group
+    uint16_t bg_free_inodes_count;   // Number of unallocated inodes in group
+    uint16_t bg_used_dirs_count;     // Number of directories in group
+    uint16_t bg_pad;                 // (Unused)
+    uint32_t bg_reserved[3];         // (Unused)
 };
 
 struct ext2_inode {
-    uint16_t i_mode;                 /* Тип файла и права доступа */
-    uint16_t i_uid;                  /* Идентификатор пользователя */
-    uint32_t i_size;                 /* Размер файла в байтах (младшие 32 бита) */
-    uint32_t i_atime;                /* Время последнего доступа */
-    uint32_t i_ctime;                /* Время создания */
-    uint32_t i_mtime;                /* Время последней модификации */
-    uint32_t i_dtime;                /* Время удаления */
-    uint16_t i_gid;                  /* Идентификатор группы */
-    uint16_t i_links_count;          /* Количество ссылок на файл */
-    uint32_t i_blocks;               /* Количество секторов (не блоков файловой системы) */
-    uint32_t i_flags;                /* Флаги */
-    uint32_t i_osd1;                 /* ОС-зависимое значение 1 */
-    uint32_t i_block[15];            /* Адреса блоков данных */
-    uint32_t i_generation;           /* Номер поколения файла (для NFS) */
-    uint32_t i_file_acl;             /* Блок с расширенными атрибутами доступа */
-    uint32_t i_dir_acl;              /* В ext2 - старшие 32 бита размера для файлов большого размера */
-    uint32_t i_faddr;                /* Адрес фрагмента */
-    uint8_t i_osd2[12];              /* ОС-зависимое значение 2 */
+    uint16_t i_mode;                 // Type and Permissions
+    uint16_t i_uid;                  // User ID
+    uint32_t i_size;                 // Lower 32 bits of size in bytes
+    uint32_t i_atime;                // Last Access Time
+    uint32_t i_ctime;                // Creation Time
+    uint32_t i_mtime;                // Last Modification time
+    uint32_t i_dtime;                // Deletion time
+    uint16_t i_gid;                  // Group ID
+    uint16_t i_links_count;          // Count of hard links to this inode
+    uint32_t i_blocks;               // Count of disk sectors (not Ext2 blocks) in use by this inode
+    uint32_t i_flags;                // Flags
+    uint32_t i_osd1;                 // Operating System Specific value #1
+    uint32_t i_block[15];            // Direct Block Pointers
+    uint32_t i_generation;           // Generation number
+    uint32_t i_file_acl;             // Extended attribute block (File ACL)
+    uint32_t i_dir_acl;              // Upper 32 bits of file size (if feature bit set) if it's a file, Directory ACL if it's a directory
+    uint32_t i_faddr;                // Block address of fragment
+    uint8_t i_osd2[12];              // Operating System Specific Value #2
 };
 #pragma pack(pop)
 
@@ -128,36 +125,14 @@ struct ext2_superblock superblock;
 struct ext2_group_desc *group_desc_table;
 
 void* read_block(uint32_t block_num, void *buffer);
-struct ext2_inode* read_inode(uint32_t inode_num, struct ext2_inode *inode_buf);
-
+void read_inode(uint32_t inode_num, struct ext2_inode *inode_buf); // Изменена сигнатура
 void output_zeros(uint64_t size);
 uint64_t write_block_data(uint32_t block_num, uint64_t remaining_size);
 void process_indirect_blocks(uint32_t block_num, int level, uint64_t *remaining_size);
-
-uint64_t write_block_data(uint32_t block_num, uint64_t remaining_size) {
-    uint64_t bytes_to_write = (remaining_size < block_size) ? remaining_size : block_size;
-
-    if (block_num == 0) {
-        // hole
-        output_zeros(bytes_to_write);
-    } else {
-        void *buffer = malloc(block_size);
-        if (!buffer) {
-            perror("malloc");
-            exit(EXIT_FAILURE);
-        }
-
-        read_block(block_num, buffer);
-        if (fwrite(buffer, 1, bytes_to_write, stdout) != bytes_to_write) {
-            perror("fwrite");
-            exit(EXIT_FAILURE);
-        }
-
-        free(buffer);
-    }
-
-    return bytes_to_write;
-}
+uint64_t process_direct_blocks(struct ext2_inode *inode, uint64_t file_size, uint32_t blocks_to_process);
+uint64_t process_singly_indirect(uint32_t singly_block_num, uint64_t file_size, uint64_t bytes_already_written, uint64_t singly_max_bytes, uint32_t entries_per_block);
+uint64_t process_doubly_indirect(uint32_t doubly_block_num, uint64_t file_size, uint64_t bytes_already_written, uint64_t doubly_max_bytes, uint32_t entries_per_block, uint64_t remaining_blocks);
+void extract_inode_data(uint32_t inode_num);
 
 void* read_block(uint32_t block_num, void *buffer) {
     if (!buffer) {
@@ -187,7 +162,12 @@ void* read_block(uint32_t block_num, void *buffer) {
     return buffer;
 }
 
-struct ext2_inode* read_inode(uint32_t inode_num, struct ext2_inode *inode_buf) {
+void read_inode(uint32_t inode_num, struct ext2_inode *inode_buf) {
+    if (!inode_buf) {
+        fprintf(stderr, "Error: inode_buf cannot be NULL\n");
+        exit(EXIT_FAILURE);
+    }
+
     if (inode_num == 0 || inode_num > le32_to_cpu(superblock.s_inodes_count)) {
         fprintf(stderr, "Wrong inode: %u\n", inode_num);
         exit(EXIT_FAILURE);
@@ -225,19 +205,8 @@ struct ext2_inode* read_inode(uint32_t inode_num, struct ext2_inode *inode_buf) 
 
     read_block(inode_block, block_buffer);
 
-    if (!inode_buf) {
-        inode_buf = malloc(sizeof(struct ext2_inode));
-        if (!inode_buf) {
-            perror("Memory inode buffer allocation error");
-            free(block_buffer);
-            exit(EXIT_FAILURE);
-        }
-    }
-
     memcpy(inode_buf, (char *) block_buffer + inode_offset, sizeof(struct ext2_inode));
     free(block_buffer);
-
-    return inode_buf;
 }
 
 void output_zeros(uint64_t size) {
@@ -252,6 +221,31 @@ void output_zeros(uint64_t size) {
         }
         remaining -= chunk;
     }
+}
+
+uint64_t write_block_data(uint32_t block_num, uint64_t remaining_size) {
+    uint64_t bytes_to_write = (remaining_size < block_size) ? remaining_size : block_size;
+
+    if (block_num == 0) {
+        // hole
+        output_zeros(bytes_to_write);
+    } else {
+        void *buffer = malloc(block_size);
+        if (!buffer) {
+            perror("malloc");
+            exit(EXIT_FAILURE);
+        }
+
+        read_block(block_num, buffer);
+        if (fwrite(buffer, 1, bytes_to_write, stdout) != bytes_to_write) {
+            perror("fwrite");
+            exit(EXIT_FAILURE);
+        }
+
+        free(buffer);
+    }
+
+    return bytes_to_write;
 }
 
 void process_indirect_blocks(uint32_t block_num, int level, uint64_t *remaining_size) {

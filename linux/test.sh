@@ -42,7 +42,7 @@ setup_filesystem() {
   mkdir -p "${MNT}"
 
   info "Монтирование файловой системы"
-  sudo mount -o loop "${IMG}" "${MNT}"
+  sudo mount "${IMG}" "${MNT}"
   sudo chown "$(id -u):$(id -g)" "${MNT}"
 }
 
@@ -76,7 +76,7 @@ create_test_files() {
 
   # Тест 6: Файл, состоящий только из нулей (все блоки - дыры)
   info "6. Создание файла только из дыр"
-  truncate -s 32K "${MNT}/all_holes.bin"
+  truncate --size 32K "${MNT}/all_holes.bin"
 
   # Тест 7: Большой разреженный файл с дырой, превышающей прямую адресацию
   info "7. Создание файла с дырой, превышающей прямую адресацию"
@@ -97,7 +97,6 @@ create_test_files() {
   dd if=/dev/urandom of="${MNT}/mixed_holes.bin" bs=4K count=1 seek=1005 status=none conv=notrunc
 
   info "Использование дискового пространства (реальные блоки):"
-  # shellcheck disable=SC2012
   ls -lhs "${MNT}"/*.bin | awk '{printf "%-20s %8s %8s\n", $10, $1, $5}'
 }
 
@@ -107,7 +106,6 @@ gather_info() {
 
   for file in "${MNT}"/*.bin; do
     filename=$(basename "$file")
-    # shellcheck disable=SC2012
     inode=$(ls -i "$file" | awk '{print $1}')
     checksum=$(sha512sum "$file" | awk '{print $1}')
     echo -e "${filename}\t${inode}\t${checksum}" >> sha512sums.txt
@@ -115,21 +113,21 @@ gather_info() {
   done
 }
 
-test_extraction() {
+test_extraction_file() {
   info "Размонтирование файловой системы"
   sudo umount "${MNT}"
 
   info "Тестирование извлечения данных"
 
-  success_count=0
-  total_count=0
+  ok=0
+  total=0
 
   while IFS=$'\t' read -r filename inode original_checksum; do
     if [ "$filename" = "FILENAME" ]; then
       continue
     fi
 
-    total_count=$((total_count + 1))
+    total=$((total + 1))
 
     info "Извлечение данных из файла: $filename (inode: $inode)"
     ./getinode "${IMG}" "${inode}" > "extracted_${filename}"
@@ -138,7 +136,7 @@ test_extraction() {
 
     if [ "$original_checksum" = "$extracted_checksum" ]; then
       success "Контрольная сумма совпадает для $filename"
-      success_count=$((success_count + 1))
+      ok=$((ok + 1))
     else
       error "Контрольная сумма НЕ совпадает для $filename"
       error "  Оригинал:  $original_checksum"
@@ -160,25 +158,66 @@ test_extraction() {
 
   echo
   info "Итоги тестирования:"
-  info "Всего тестов: $total_count"
-  info "Успешно: $success_count"
+  info "Всего тестов: $total"
+  success "Успешно: $ok"
 
-  if [ "$success_count" -eq "$total_count" ]; then
-    success "ВСЕ ТЕСТЫ ПРОЙДЕНЫ УСПЕШНО!"
-  else
-    error "ОБНАРУЖЕНЫ ОШИБКИ: $((total_count - success_count)) из $total_count тестов не пройдены"
+  if [ ! "$ok" -eq "$total" ]; then
+    error "ОБНАРУЖЕНЫ ОШИБКИ: $((total - ok)) из $total тестов не пройдены"
     return 1
   fi
 }
 
+test_extraction_loop() {
+  info "Настройка losetup"
+  LOOPDEV=$(sudo losetup -f --show "${IMG}")
+  info "Образ подключён к ${LOOPDEV}"
+
+  sudo chmod a+r "${LOOPDEV}"
+
+  info "Проверка getinode через ${LOOPDEV}"
+  local ok=0 total=0
+
+  while IFS=$'\t' read -r filename inode original_checksum; do
+    [[ "$filename" == "FILENAME" ]] && continue
+    total=$((total+1))
+
+    info "Извлекаем $filename (inode $inode) из ${LOOPDEV}"
+    ./getinode "${LOOPDEV}" "${inode}" > "extracted_loop_${filename}"
+    extracted_checksum=$(sha512sum "extracted_loop_${filename}" | awk '{print $1}')
+
+    if [[ "$original_checksum" == "$extracted_checksum" ]]; then
+      success "(LOOP) Контрольная сумма совпадает для $filename"
+      ok=$((ok+1))
+    else
+      error "(LOOP) Контрольная сумма НЕ совпадает для $filename"
+    fi
+  done < sha512sums.txt
+
+  echo
+  info "Информация по блочным устройствам"
+  lsblk -o name,size,fstype "${LOOPDEV}"
+
+  echo
+  info "Итоги loop-тестирования:"
+  info "Всего тестов: $total"
+  success "Успешно: $ok"
+
+  sudo losetup -d "${LOOPDEV}"
+  LOOPDEV=""
+  [[ "$ok" -eq "$total" ]] || return 1
+}
+
+
 echo -e "${YELLOW}=== ТЕСТИРОВАНИЕ ОБРАБОТКИ РАЗРЕЖЕННЫХ ФАЙЛОВ ===${NC}"
 
 setup_filesystem
-
 create_test_files
-
 gather_info
+test_extraction_file
 
-test_extraction
+echo
+echo -e "${YELLOW}=== ТЕСТИРОВАНИЕ (ПЕТЛЕВЫХ) БЛОЧНЫХ УСТРОЙСТВ ===${NC}"
+
+test_extraction_loop
 
 echo -e "${YELLOW}=== ТЕСТИРОВАНИЕ ЗАВЕРШЕНО ===${NC}"
